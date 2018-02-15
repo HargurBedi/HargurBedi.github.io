@@ -14,8 +14,7 @@ public class countnew{
 	};
 	public static class Map extends Mapper<LongWritable,Text,Text,IntWritable>
 	{
-		public void map(LongWritable key, Text value, Context
-			context) throws IOException, InterruptedException {
+		public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 			String line = value.toString();
 			String[] elements=line.split(",");
 			int i = Integer.parseInt(elements[1]);

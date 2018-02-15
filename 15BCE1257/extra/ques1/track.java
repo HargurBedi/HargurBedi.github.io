@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.util.StringTokenizer;
-
+import java.util.*;
+import java.io.*;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -11,54 +12,37 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
-public class Salary{
+public class track{
 	public static class Map extends Mapper<Object, Text, Text, IntWritable>{
-		private final static IntWritable one = new IntWritable(1);
-		private Text word = new Text();
-
 		public void map(Object key, Text value, Context context) throws IOException, InterruptedException{
-			StringTokenizer st = new StringTokenizer(value.toString());
-			while(st.hasMoreTokens()){
-				word.set(st.nextToken());
-				context.write(word,one);
+			String[] elements = value.toString().split(",");
+			int shared = Integer.parseInt(elements[2]);
+			if(shared == 1){
+				context.write(new Text(elements[1]), new IntWritable(1));
 			}
-			String[] line = value.toString().split(",");
-			int i = Integer.parseInt(line[1]);
-			if(i > 100000){
-				context.write()
-			}
-
 		}
-
 	}
 
 	public static class Reduce extends Reducer<Text, IntWritable, Text, IntWritable>{
-		int maxSum = 0;
-		Text maxOccuredKey = new Text();
 		public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException,InterruptedException{
 			int sum = 0;
 			for(IntWritable val: values){
 				sum += val.get();
 			}
-			if(sum > maxSum){
-				maxSum = sum;
-				maxOccuredKey.set(key);
-			}
-		}
-		@Override
-		protected void cleanup(Context context) throws IOException, InterruptedException{
-			context.write(maxOccuredKey, new IntWritable(maxSum));
+			context.write(key, new IntWritable(sum));
 		}
 	}
 
 	public static void main(String[] args) throws Exception{
 		Configuration conf = new Configuration();
-		Job job = new Job(conf,"Salary");
-		job.setJarByClass(Salary.class);
+		Job job = new Job(conf,"track");
+		job.setJarByClass(track.class);
 		job.setMapperClass(Map.class);
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(IntWritable.class);
 		job.setReducerClass(Reduce.class);
+		//job.setInputFormatClass(TextInputFormat.class);
+		//job.setOutputFormatClass(TextOutputFormat.class);
 		FileInputFormat.addInputPath(job, new Path(args[0]));
 		FileOutputFormat.setOutputPath(job, new Path(args[1]));
 		job.waitForCompletion(true);
